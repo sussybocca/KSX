@@ -10,29 +10,30 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # Check required files exist
+      # Step 1: Check required files exist
       - name: Check required files
         run: |
           PROJECT_DIR="hsx/Flows/projects"
           FOUND=0
           for DIR in $PROJECT_DIR/*; do
-            if [ -f "$DIR/custom-lango.txt" ] && [ -f "$DIR/language.txt" ]; then
-              LANG_FILE=$(ls $DIR/*.language 2>/dev/null | head -n 1)
+            if [ -d "$DIR" ] && [ -f "$DIR/custom-lango.txt" ] && [ -f "$DIR/language.txt" ]; then
+              LANG_FILE=$(ls "$DIR"/*.language 2>/dev/null | head -n 1)
               if [ -f "$LANG_FILE" ]; then
+                echo "Found valid project: $DIR"
                 FOUND=1
                 break
               fi
             fi
           done
           if [ "$FOUND" -eq 0 ]; then
-            echo "Required files missing (custom-lango.txt, language.txt, .language sample code)."
+            echo "Required files missing: custom-lango.txt, language.txt, or .language sample code."
             exit 1
-          fi
 
-      # Check minimum 200 lines
+      # Step 2: Check minimum 200 lines for language.txt and .language sample
       - name: Check minimum lines
         run: |
-          for DIR in hsx/Flows/projects/*; do
+          PROJECT_DIR="hsx/Flows/projects"
+          for DIR in $PROJECT_DIR/*; do
             if [ -f "$DIR/language.txt" ]; then
               LINES=$(wc -l < "$DIR/language.txt")
               if [ "$LINES" -lt 200 ]; then
@@ -40,7 +41,7 @@ jobs:
                 exit 1
               fi
             fi
-            LANG_FILE=$(ls $DIR/*.language 2>/dev/null | head -n 1)
+            LANG_FILE=$(ls "$DIR"/*.language 2>/dev/null | head -n 1)
             if [ -f "$LANG_FILE" ]; then
               LINES=$(wc -l < "$LANG_FILE")
               if [ "$LINES" -lt 200 ]; then
@@ -49,3 +50,7 @@ jobs:
               fi
             fi
           done
+
+      # Step 3: Signal validation passed
+      - name: Validation passed
+        run: echo "All required files exist and have at least 200 lines. PR is valid!"
