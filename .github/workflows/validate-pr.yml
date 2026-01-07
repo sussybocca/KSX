@@ -1,0 +1,51 @@
+name: Validate PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # Check required files exist
+      - name: Check required files
+        run: |
+          PROJECT_DIR="hsx/Flows/projects"
+          FOUND=0
+          for DIR in $PROJECT_DIR/*; do
+            if [ -f "$DIR/custom-lango.txt" ] && [ -f "$DIR/language.txt" ]; then
+              LANG_FILE=$(ls $DIR/*.language 2>/dev/null | head -n 1)
+              if [ -f "$LANG_FILE" ]; then
+                FOUND=1
+                break
+              fi
+            fi
+          done
+          if [ "$FOUND" -eq 0 ]; then
+            echo "Required files missing (custom-lango.txt, language.txt, .language sample code)."
+            exit 1
+          fi
+
+      # Check minimum 200 lines
+      - name: Check minimum lines
+        run: |
+          for DIR in hsx/Flows/projects/*; do
+            if [ -f "$DIR/language.txt" ]; then
+              LINES=$(wc -l < "$DIR/language.txt")
+              if [ "$LINES" -lt 200 ]; then
+                echo "language.txt in $DIR has less than 200 lines."
+                exit 1
+              fi
+            fi
+            LANG_FILE=$(ls $DIR/*.language 2>/dev/null | head -n 1)
+            if [ -f "$LANG_FILE" ]; then
+              LINES=$(wc -l < "$LANG_FILE")
+              if [ "$LINES" -lt 200 ]; then
+                echo "$LANG_FILE has less than 200 lines."
+                exit 1
+              fi
+            fi
+          done
