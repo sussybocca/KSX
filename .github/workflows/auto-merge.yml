@@ -18,14 +18,21 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const pr = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number
-            });
+            // Get the first pull request linked to the workflow_run
+            const prNumber = github.event.workflow_run.pull_requests[0]?.number;
+
+            if (!prNumber) {
+              console.log("No PR found for this workflow run. Exiting.");
+              return;
+            }
+
+            console.log(`Merging PR #${prNumber} automatically...`);
+
             await github.rest.pulls.merge({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: context.issue.number,
+              pull_number: prNumber,
               merge_method: "squash"
             });
+
+            console.log(`PR #${prNumber} merged successfully!`);
