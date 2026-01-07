@@ -45,7 +45,7 @@ jobs:
             HTML_FILE="$DIR/example.html"
             RUNTIME_FILE="../../runtimes/$(basename "$DIR")-runtime.js"
             if [ ! -f "$HTML_FILE" ]; then
-              cat > "$HTML_FILE" <<EOL
+cat <<EOL > "$HTML_FILE"
 <!DOCTYPE html>
 <html>
 <head>
